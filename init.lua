@@ -15,9 +15,20 @@ end
 
 volume_widget = wibox.widget.textbox()
 volume_widget.set_align("right")
+volume_widget:connect_signal("button::release", function(_, _, _, button)
+    os.execute("amixer -q sset Master toggle")
+    volume_widget.text = get_volume()
+end)
 
 function get_volume()
-    return os.capture("awk -F\"[][]\" '/dB/ { print $2 }' <(amixer sget Master)", true)
+    local volume = os.capture("awk -F\"[][]\" '/dB/ { print $2 }' <(amixer sget Master)", true)
+    local state = os.capture("amixer get Master", true)
+    if string.find(state, "off") then
+        volume = "Mut"
+    else
+        volume = volume .. "%"
+    end
+    return volume
 end
 
 volume_widget.text = get_volume()
